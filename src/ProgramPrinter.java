@@ -63,14 +63,14 @@ public class ProgramPrinter implements jythonListener {
     @Override
     public void enterVarDec(jythonParser.VarDecContext ctx) { //TODO
         switch (ctx.parent.getRuleIndex()){
-            case 3:
+            case 3: //class_body
                 System.out.printf("field: %s/ type= %s\n".indent(indention), ctx.ID(), ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())));
                 break;
-            case 8:
+            case 8: //parameter
                 break;
-            case 9:
+            case 9: //statement
                 break;
-            case 19:
+            case 19: //assignment
                 break;
         }
     }
