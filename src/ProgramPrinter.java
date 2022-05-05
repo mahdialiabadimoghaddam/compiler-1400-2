@@ -5,10 +5,12 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class ProgramPrinter implements jythonListener {
+    private int indention = 0;
 
     @Override
     public void enterProgram(jythonParser.ProgramContext ctx) {
         System.out.println("program start{");
+        indention += 4;
     }
 
     @Override
@@ -18,7 +20,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterImportclass(jythonParser.ImportclassContext ctx) {
-        System.out.print("    ");
+        System.out.print("    "); //FIXME use 'indention'
         System.out.print("import class: ");
     }
 
@@ -50,43 +52,41 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterClass_body(jythonParser.Class_bodyContext ctx) {
-        System.out.print("        ");
-        System.out.println(ctx.varDec().CLASSNAME());
+        indention += 4;
     }
 
     @Override
     public void exitClass_body(jythonParser.Class_bodyContext ctx) {
-//        System.out.println(ctx.getText());
-//        System.out.println("(=======)");
+        indention -= 4;
     }
 
     @Override
-    public void enterVarDec(jythonParser.VarDecContext ctx) {
-//        String x = ctx.CLASSNAME().getSymbol();
-//        if(ctx.CLASSNAME()){
-//            System.out.println("empty");
-//        }
-//        else {
-//            System.out.println(ctx.CLASSNAME());
-//        }
-//        if(ctx.TYPE() != null) System.out.println(ctx.TYPE());
-//        System.out.println(ctx.CLASSNAME().getText().);
-//        System.out.println("=======");
+    public void enterVarDec(jythonParser.VarDecContext ctx) { //TODO
+        switch (ctx.parent.getRuleIndex()){
+            case 3:
+                System.out.printf("field: %s/ type= %s\n".indent(indention), ctx.ID(), ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())));
+                break;
+            case 8:
+                break;
+            case 9:
+                break;
+            case 19:
+                break;
+        }
     }
 
     @Override
-    public void exitVarDec(jythonParser.VarDecContext ctx) {
-        System.out.println(ctx.CLASSNAME());
-//        System.out.println("xxx-----=======----xxxx");
+    public void exitVarDec(jythonParser.VarDecContext ctx) { //TODO
+//        System.out.println("vardec-");
     }
 
     @Override
-    public void enterArrayDec(jythonParser.ArrayDecContext ctx) {
+    public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
 
     }
 
     @Override
-    public void exitArrayDec(jythonParser.ArrayDecContext ctx) {
+    public void exitArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
 
     }
 
