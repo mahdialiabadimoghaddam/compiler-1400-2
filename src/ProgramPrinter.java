@@ -77,12 +77,17 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void exitVarDec(jythonParser.VarDecContext ctx) { //TODO
-//        System.out.println("vardec-");
     }
 
     @Override
     public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
-
+        switch (ctx.parent.getRuleIndex()){
+            case 3: //class_body
+                System.out.printf("field: %s/ type= %s\n".indent(indention), ctx.ID(), ctx.CLASSNAME().getText());
+                break;
+            case 19: //assignment
+                break;
+        }
     }
 
     @Override
