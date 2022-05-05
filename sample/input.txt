@@ -12,7 +12,8 @@ class Human(Nothing, Nothing2){
         self.nose = n
     }
     def Voice speak(){
-        Voic voice
+        Voice voice
+        Voice[10] voices
         return voice
     }
     def void eat(Food food, int c){
