@@ -68,7 +68,6 @@ public class ProgramPrinter implements jythonListener {
                 System.out.printf("field: %s/ type= %s\n".indent(indention), ctx.ID(), ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())));
                 break;
             case 8: //parameter
-                System.out.printf("%s %s,", ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())), ctx.ID());
                 break;
             case 19: //assignment
                 break;
@@ -94,27 +93,33 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterMethodDec(jythonParser.MethodDecContext ctx) {
-
+        System.out.printf("class method: %s%s".indent(indention),ctx.ID(),((ctx.CLASSNAME()==null))?(ctx.TYPE()==null)?("{"):("/ return type: "+ctx.TYPE()+"{"):("/ return type: "+ctx.CLASSNAME()+"{"));
     }
 
     @Override
     public void exitMethodDec(jythonParser.MethodDecContext ctx) {
-
+        System.out.print("}".indent(indention));
     }
 
     @Override
     public void enterConstructor(jythonParser.ConstructorContext ctx) {
-
+        System.out.printf("class constructor: %s".indent(indention),ctx.CLASSNAME()+"{");
+//        indention += 4;
     }
 
     @Override
     public void exitConstructor(jythonParser.ConstructorContext ctx) {
-
+        System.out.print("}".indent(indention));
+//        indention -= 4;
     }
 
     @Override
     public void enterParameter(jythonParser.ParameterContext ctx) {
-
+        System.out.print("            parameter list: [");
+        for (int i=0;i<ctx.varDec().size();i++){
+            System.out.print(ctx.varDec(i).CLASSNAME()+" "+ctx.varDec(i).ID()+", ");
+        }
+        System.out.print("]\n");
     }
 
     @Override
