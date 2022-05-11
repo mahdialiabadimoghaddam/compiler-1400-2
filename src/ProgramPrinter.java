@@ -117,7 +117,12 @@ public class ProgramPrinter implements jythonListener {
     public void enterParameter(jythonParser.ParameterContext ctx) {
         System.out.print("            parameter list: [");
         for (int i=0;i<ctx.varDec().size();i++){
-            System.out.print(ctx.varDec(i).CLASSNAME()+" "+ctx.varDec(i).ID()+", ");
+            if(ctx.varDec().size()==1){
+                System.out.print(ctx.varDec(i).CLASSNAME()+" "+ctx.varDec(i).ID());
+            }
+            else {
+                System.out.print(ctx.varDec(i).CLASSNAME()+" "+ctx.varDec(i).ID()+", ");
+            }
         }
         System.out.print("]\n");
     }
