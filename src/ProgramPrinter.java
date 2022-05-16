@@ -15,50 +15,45 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void exitProgram(jythonParser.ProgramContext ctx) {
-        System.out.println("}");
+        indention -= 4;
+        System.out.println("}".indent(indention));
     }
 
     @Override
     public void enterImportclass(jythonParser.ImportclassContext ctx) {
-        System.out.print("    "); //FIXME use 'indention'
-        System.out.print("import class: ");
+        System.out.printf("import class: %s".indent(indention), ctx.CLASSNAME());
     }
 
     @Override
-    public void exitImportclass(jythonParser.ImportclassContext ctx) {
-        System.out.println(ctx.CLASSNAME());
-    }
+    public void exitImportclass(jythonParser.ImportclassContext ctx) {}
 
     @Override
     public void enterClassDef(jythonParser.ClassDefContext ctx) {
-        System.out.print("    ");
-        System.out.print("class: ");
-        System.out.print(ctx.CLASSNAME(0)+"/ class parents: ");
+        StringBuilder parents = new StringBuilder();
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
-                System.out.print(ctx.CLASSNAME(i)+",");
+                parents.append(ctx.CLASSNAME(i)).append(",");
             }
-            System.out.println(" {");
         }
         else {
-            System.out.println("object, {");
+            parents.append("object, ");
         }
-    }
+        System.out.printf("class: %s/ class parents: %s{".indent(indention), ctx.CLASSNAME(0),parents.toString());
 
-    @Override
-    public void exitClassDef(jythonParser.ClassDefContext ctx) {
-        System.out.println("    }");
-    }
-
-    @Override
-    public void enterClass_body(jythonParser.Class_bodyContext ctx) {
         indention += 4;
     }
 
     @Override
-    public void exitClass_body(jythonParser.Class_bodyContext ctx) {
+    public void exitClassDef(jythonParser.ClassDefContext ctx){
         indention -= 4;
+        System.out.println("}".indent(indention));
     }
+
+    @Override
+    public void enterClass_body(jythonParser.Class_bodyContext ctx) {}
+
+    @Override
+    public void exitClass_body(jythonParser.Class_bodyContext ctx) {}
 
     @Override
     public void enterVarDec(jythonParser.VarDecContext ctx) { //TODO
@@ -94,23 +89,25 @@ public class ProgramPrinter implements jythonListener {
     @Override
     public void enterMethodDec(jythonParser.MethodDecContext ctx) {
         System.out.printf("class method: %s%s".indent(indention),ctx.ID(),((ctx.CLASSNAME()==null))?(ctx.TYPE()==null)?("{"):("/ return type: "+ctx.TYPE()+"{"):("/ return type: "+ctx.CLASSNAME()+"{"));
+        indention += 4;
     }
 
     @Override
     public void exitMethodDec(jythonParser.MethodDecContext ctx) {
+        indention -= 4;
         System.out.print("}".indent(indention));
     }
 
     @Override
     public void enterConstructor(jythonParser.ConstructorContext ctx) {
         System.out.printf("class constructor: %s".indent(indention),ctx.CLASSNAME()+"{");
-//        indention += 4;
+        indention += 4;
     }
 
     @Override
     public void exitConstructor(jythonParser.ConstructorContext ctx) {
+        indention -= 4;
         System.out.print("}".indent(indention));
-//        indention -= 4;
     }
 
     @Override
