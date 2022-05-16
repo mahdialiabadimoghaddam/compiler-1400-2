@@ -16,7 +16,7 @@ public class ProgramPrinter implements jythonListener {
     @Override
     public void exitProgram(jythonParser.ProgramContext ctx) {
         indention -= 4;
-        System.out.println("}".indent(indention));
+        System.out.println("}".indent(indention).stripTrailing());
     }
 
     @Override
@@ -39,7 +39,6 @@ public class ProgramPrinter implements jythonListener {
             parents.append("object, ");
         }
         System.out.printf("class: %s/ class parents: %s{".indent(indention), ctx.CLASSNAME(0),parents.toString());
-
         indention += 4;
     }
 
@@ -60,9 +59,10 @@ public class ProgramPrinter implements jythonListener {
         switch (ctx.parent.getRuleIndex()){
             case 3: //class_body
             case 9: //statement
-                System.out.printf("field: %s/ type= %s\n".indent(indention), ctx.ID(), ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())));
+                System.out.printf("field: %s/ type= %s".indent(indention), ctx.ID(), ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())));
                 break;
             case 8: //parameter
+                    System.out.printf("%s %s,", ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())), ctx.ID().getText());
                 break;
             case 19: //assignment
                 break;
@@ -70,14 +70,16 @@ public class ProgramPrinter implements jythonListener {
     }
 
     @Override
-    public void exitVarDec(jythonParser.VarDecContext ctx) { //TODO
+    public void exitVarDec(jythonParser.VarDecContext ctx) {
     }
 
     @Override
     public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
         switch (ctx.parent.getRuleIndex()) { //class_body
-            case 3, 19 -> //assignment
-                    System.out.printf("field: %s/ type= %s\n".indent(indention), ctx.ID(), ctx.CLASSNAME().getText());
+            case 3, 19 -> { //assignment
+                System.out.printf("field: %s/ type= %s".indent(indention).stripTrailing(), ctx.ID(), ctx.CLASSNAME().getText());
+                System.out.println();
+            }
         }
     }
 
@@ -105,7 +107,7 @@ public class ProgramPrinter implements jythonListener {
             }
             toPrint = String.format("class method: " + ctx.ID().getText() + "/ return Type=%s{", returnType);
         }
-        System.out.printf(toPrint.indent(indention));
+        System.out.println(toPrint.indent(indention).stripTrailing());
         indention += 4;
     }
 
@@ -129,32 +131,19 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterParameter(jythonParser.ParameterContext ctx) {
-        System.out.print("            parameter list: [");
-        for (int i=0;i<ctx.varDec().size();i++){
-            if(ctx.varDec().size()==1){
-                System.out.print(ctx.varDec(i).CLASSNAME()+" "+ctx.varDec(i).ID());
-            }
-            else {
-                System.out.print(ctx.varDec(i).CLASSNAME()+" "+ctx.varDec(i).ID()+", ");
-            }
-        }
-        System.out.print("]\n");
+        System.out.print("parameter list: [".indent(indention).stripTrailing());
     }
 
     @Override
     public void exitParameter(jythonParser.ParameterContext ctx) {
-
+        System.out.println("]");
     }
 
     @Override
-    public void enterStatement(jythonParser.StatementContext ctx) {
-
-    }
+    public void enterStatement(jythonParser.StatementContext ctx) {}
 
     @Override
-    public void exitStatement(jythonParser.StatementContext ctx) {
-
-    }
+    public void exitStatement(jythonParser.StatementContext ctx) {}
 
     @Override
     public void enterReturn_statment(jythonParser.Return_statmentContext ctx) {
