@@ -52,7 +52,7 @@ nested statement{
 ---
  **در ادامه یک نمونه ورودی و خروجی برای درک بهتر آورده شده است:**
 
-```
+```python
                                                     | program start{
 import Nothing                                      |     import class: Nothing1
 import Nothing2                                     |     import class: Nothing2
