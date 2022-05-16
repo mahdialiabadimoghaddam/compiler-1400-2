@@ -88,7 +88,24 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterMethodDec(jythonParser.MethodDecContext ctx) {
-        System.out.printf("class method: %s%s".indent(indention),ctx.ID(),((ctx.CLASSNAME()==null))?(ctx.TYPE()==null)?("{"):("/ return type: "+ctx.TYPE()+"{"):("/ return type: "+ctx.CLASSNAME()+"{"));
+        String toPrint = "";
+        if(ctx.ID().getText().equals("main")){
+            toPrint = "main method{";
+        }
+        else{
+            String returnType;
+            if(ctx.TYPE() != null){
+                returnType = ctx.TYPE().getText();
+            }
+            else if(ctx.CLASSNAME() != null){
+                returnType = ctx.CLASSNAME().getText();
+            }
+            else{
+                returnType = "void";
+            }
+            toPrint = String.format("class method: " + ctx.ID().getText() + "/ return Type=%s{", returnType);
+        }
+        System.out.printf(toPrint.indent(indention));
         indention += 4;
     }
 

@@ -8,6 +8,9 @@ class Human(Nothing, Nothing2){
     int calories
     bool isHungry
 
+    def void main(){
+        int count
+    }
     def Human(Nose n){
         self.nose = n
     }
