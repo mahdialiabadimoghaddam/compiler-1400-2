@@ -8,7 +8,7 @@ arrayDec : (TYPE | CLASSNAME) '['INTEGER']' ID ;
 methodDec : 'def' ((TYPE | CLASSNAME)|'void') ID '(' parameter* ')''{' ( statement)* '}';
 constructor : 'def' (TYPE | CLASSNAME) '(' parameter* ')''{' ( statement)* '}' ;
 parameter : varDec (',' varDec)* ;
-statement : varDec | assignment | print_statment | method_call | return_statment
+statement : varDec | arrayDec | assignment | print_statment | method_call | return_statment
 |if_statment | while_statment | if_else_statment | for_statment;
 return_statment : 'return' exp ;
 condition_list : condition (('or'|'and') condition)* ;
@@ -32,14 +32,12 @@ arithmetic_operator: '+' | '-' | '*' | '/' | '%' ;
 relational_operators : '<' | '>' | '<=' | '>=' | '==' | '!=' ;
 assignment_operators : '=' | '+=' | '-=' | '*=' | '/=' ;
 
-TYPE: INT | FLOATING_POINT | STRING | BOOL;
-INT: 'int';
-FLOATING_POINT: 'float';
-STRING: 'string';
-BOOL: 'bool';
+TYPE: 'int' | 'float' | 'String' | 'bool';
+BOOL: 'ture'|'false';
 CLASSNAME: [A-Z] (LETTER|DIGIT)*;
 ID: [a-z]([A-Za-z_])*;
 LETTER: [A-Za-z];
+STRING: '"' LETTER* '"';
 INTEGER: DIGIT+;
 FLOAT: (DIGIT)+ '.' (DIGIT)+;
 DIGIT: [0-9];
