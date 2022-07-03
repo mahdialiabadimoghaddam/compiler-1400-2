@@ -6,9 +6,13 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class ProgramPrinter implements jythonListener {
     private int indention = 0;
+    public SymbolTable root;
+    private SymbolTable currentParent;
 
     @Override
     public void enterProgram(jythonParser.ProgramContext ctx) {
+//        System.out.println(ctx.getAltNumber());
+//        root = currentParent = new SymbolTable("program", ctx)
         System.out.println("program start{");
         indention += 4;
     }
@@ -29,6 +33,8 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterClassDef(jythonParser.ClassDefContext ctx) {
+
+        System.out.println(ctx.start.getLine());
         StringBuilder parents = new StringBuilder();
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
