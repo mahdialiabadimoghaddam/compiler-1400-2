@@ -6,7 +6,7 @@ class_body : varDec | methodDec | constructor | arrayDec ;
 varDec : (TYPE | CLASSNAME) ID ;
 arrayDec : (TYPE | CLASSNAME) '['INTEGER']' ID ;
 methodDec : 'def' ((TYPE | CLASSNAME)|'void') ID '(' parameter* ')''{' ( statement)* '}';
-constructor : 'def' (TYPE | CLASSNAME) '(' parameter* ')''{' ( statement)* '}' ;
+constructor : 'def' CLASSNAME '(' parameter* ')''{' ( statement)* '}' ;
 parameter : varDec (',' varDec)* ;
 statement : varDec | arrayDec | assignment | print_statment | method_call | return_statment
 |if_statment | while_statment | if_else_statment | for_statment;

@@ -1,4 +1,4 @@
-package gen;// Generated from D:/Projects/compiler-1400-2/src\jython.g4 by ANTLR 4.10.1
+// Generated from D:/Projects/compiler-1400-2/src\jython.g4 by ANTLR 4.10.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -656,7 +656,6 @@ public class jythonParser extends Parser {
 	}
 
 	public static class ConstructorContext extends ParserRuleContext {
-		public TerminalNode TYPE() { return getToken(jythonParser.TYPE, 0); }
 		public TerminalNode CLASSNAME() { return getToken(jythonParser.CLASSNAME, 0); }
 		public List<ParameterContext> parameter() {
 			return getRuleContexts(ParameterContext.class);
@@ -699,15 +698,7 @@ public class jythonParser extends Parser {
 			setState(127);
 			match(T__9);
 			setState(128);
-			_la = _input.LA(1);
-			if ( !(_la==TYPE || _la==CLASSNAME) ) {
-			_errHandler.recoverInline(this);
-			}
-			else {
-				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-				_errHandler.reportMatch(this);
-				consume();
-			}
+			match(CLASSNAME);
 			setState(129);
 			match(T__2);
 			setState(133);
@@ -2564,7 +2555,7 @@ public class jythonParser extends Parser {
 		"\t\u0000xw\u0001\u0000\u0000\u0000y|\u0001\u0000\u0000\u0000zx\u0001\u0000"+
 		"\u0000\u0000z{\u0001\u0000\u0000\u0000{}\u0001\u0000\u0000\u0000|z\u0001"+
 		"\u0000\u0000\u0000}~\u0005\u0007\u0000\u0000~\r\u0001\u0000\u0000\u0000"+
-		"\u007f\u0080\u0005\n\u0000\u0000\u0080\u0081\u0007\u0000\u0000\u0000\u0081"+
+		"\u007f\u0080\u0005\n\u0000\u0000\u0080\u0081\u0005+\u0000\u0000\u0081"+
 		"\u0085\u0005\u0003\u0000\u0000\u0082\u0084\u0003\u0010\b\u0000\u0083\u0082"+
 		"\u0001\u0000\u0000\u0000\u0084\u0087\u0001\u0000\u0000\u0000\u0085\u0083"+
 		"\u0001\u0000\u0000\u0000\u0085\u0086\u0001\u0000\u0000\u0000\u0086\u0088"+
