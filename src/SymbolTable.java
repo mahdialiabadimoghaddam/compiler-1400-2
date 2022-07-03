@@ -25,7 +25,7 @@ public class SymbolTable {
     }
 
     public String lookup(String idefName){
-        return table.get(idefName);
+        return table.getOrDefault(idefName, null);
     }
 
     private String printItems(){
