@@ -4,28 +4,25 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.Stack;
+
 public class ProgramPrinter implements jythonListener {
-    private int indention = 0;
-    public SymbolTable root;
-    private SymbolTable currentParent;
+    private final Stack<SymbolTable> scopes = new Stack<>();
 
     @Override
     public void enterProgram(jythonParser.ProgramContext ctx) {
-//        System.out.println(ctx.getAltNumber());
-//        root = currentParent = new SymbolTable("program", ctx)
-        System.out.println("program start{");
-        indention += 4;
+        scopes.push(new SymbolTable("program", ctx.start.getLine()));
+        SymbolTable.root = scopes.peek();
     }
 
     @Override
     public void exitProgram(jythonParser.ProgramContext ctx) {
-        indention -= 4;
-        System.out.println("}".indent(indention).stripTrailing());
+        scopes.pop();
     }
 
     @Override
     public void enterImportclass(jythonParser.ImportclassContext ctx) {
-        System.out.printf("import class: %s".indent(indention), ctx.CLASSNAME());
+        scopes.peek().insert("import_" + ctx.CLASSNAME(), "import" + " (name: " + ctx.CLASSNAME() + ")");
     }
 
     @Override
@@ -33,8 +30,6 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterClassDef(jythonParser.ClassDefContext ctx) {
-
-        System.out.println(ctx.start.getLine());
         StringBuilder parents = new StringBuilder();
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
@@ -44,14 +39,16 @@ public class ProgramPrinter implements jythonListener {
         else {
             parents.append("object, ");
         }
-        System.out.printf("class: %s/ class parents: %s{".indent(indention), ctx.CLASSNAME(0),parents.toString());
-        indention += 4;
+
+        scopes.peek().insert("class_"+ctx.CLASSNAME(0), String.format("class (name: %s) (parent: %s)", ctx.CLASSNAME(0), parents));
+        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME(0).toString(), ctx.start.getLine());
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
     public void exitClassDef(jythonParser.ClassDefContext ctx){
-        indention -= 4;
-        System.out.println("}".indent(indention));
+        scopes.pop();
     }
 
     @Override
@@ -61,89 +58,118 @@ public class ProgramPrinter implements jythonListener {
     public void exitClass_body(jythonParser.Class_bodyContext ctx) {}
 
     @Override
-    public void enterVarDec(jythonParser.VarDecContext ctx) { //TODO
+    public void enterVarDec(jythonParser.VarDecContext ctx) {
+        String fieldType;
+        String identifier = ctx.ID().toString();
+        String dataType = (ctx.CLASSNAME()==null) ? ctx.TYPE().toString() : "ClassType= "+ctx.CLASSNAME().toString();
         switch (ctx.parent.getRuleIndex()){
-            case 3: //class_body
-            case 9: //statement
-                System.out.printf("field: %s/ type= %s".indent(indention), ctx.ID(), ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())));
+            case 3: //class field
+                fieldType = "ClassField";
                 break;
-            case 8: //parameter
-                    System.out.printf("%s %s,", ((ctx.CLASSNAME()==null)?(ctx.TYPE().getText()):(ctx.CLASSNAME().getText())), ctx.ID().getText());
+            case 19, 9: //assignment/method field
+                fieldType = "MethodField";
                 break;
-            case 19: //assignment
-                break;
+            default: return;
         }
+        scopes.peek().insert("Field_"+identifier, String.format("%s (name:%s) (type: [%s, isDefined: False])", fieldType, identifier, dataType));
     }
 
     @Override
-    public void exitVarDec(jythonParser.VarDecContext ctx) {
-    }
+    public void exitVarDec(jythonParser.VarDecContext ctx) {}
 
     @Override
     public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
-        switch (ctx.parent.getRuleIndex()) { //class_body
-            case 3, 19 -> { //assignment
-                System.out.printf("field: %s/ type= %s".indent(indention).stripTrailing(), ctx.ID(), ctx.CLASSNAME().getText());
-                System.out.println();
-            }
+        if (ctx.parent.getRuleIndex() == 3) { //class_body
+            String dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString() : ctx.CLASSNAME().toString();
+            scopes.peek().insert("Field_"+ctx.ID().toString(), String.format("ClassArrayField (name: %s) (type: [%s, isDefined: False])", ctx.ID().toString(), dataType));
         }
     }
 
     @Override
-    public void exitArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
-
-    }
+    public void exitArrayDec(jythonParser.ArrayDecContext ctx) {}
 
     @Override
     public void enterMethodDec(jythonParser.MethodDecContext ctx) {
-        String toPrint = "";
-        if(ctx.ID().getText().equals("main")){
-            toPrint = "main method{";
+        SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine());
+
+        String returnType = "void";
+        if(ctx.TYPE() != null)
+            returnType = ctx.TYPE().toString();
+        else if(ctx.CLASSNAME() != null)
+            returnType = "class type= " + ctx.CLASSNAME().toString();
+
+        StringBuilder parameterList = new StringBuilder();
+        if(ctx.parameter().size() != 0){
+            int index = 0;
+            parameterList.append("[parameter list: ");
+            for (var entry: ctx.parameter(0).varDec()){
+                index++;
+                String dataType;
+                String fullDataType;
+                if(entry.CLASSNAME() == null) {
+                    dataType = fullDataType = entry.TYPE().toString();
+                }
+                else {
+                    dataType = entry.CLASSNAME().toString();
+                    fullDataType = String.format("[classType= %s, isDefined= False]", dataType);
+                }
+
+                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
+            }
+            parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
-        else{
-            String returnType;
-            if(ctx.TYPE() != null){
-                returnType = ctx.TYPE().getText();
-            }
-            else if(ctx.CLASSNAME() != null){
-                returnType = ctx.CLASSNAME().getText();
-            }
-            else{
-                returnType = "void";
-            }
-            toPrint = String.format("class method: " + ctx.ID().getText() + "/ return Type=%s{", returnType);
-        }
-        System.out.println(toPrint.indent(indention).stripTrailing());
-        indention += 4;
+
+        scopes.peek().insert("Method_"+ctx.ID().toString(), String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
     public void exitMethodDec(jythonParser.MethodDecContext ctx) {
-        indention -= 4;
-        System.out.print("}".indent(indention));
+        scopes.pop();
     }
 
     @Override
     public void enterConstructor(jythonParser.ConstructorContext ctx) {
-        System.out.printf("class constructor: %s".indent(indention),ctx.CLASSNAME()+"{");
-        indention += 4;
+        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine());
+
+        StringBuilder parameterList = new StringBuilder();
+        if(ctx.parameter().size() != 0){
+            int index = 0;
+            parameterList.append("[parameter list: ");
+            for (var entry: ctx.parameter(0).varDec()){
+                index++;
+                String dataType;
+                String fullDataType;
+                if(entry.CLASSNAME() == null) {
+                    dataType = fullDataType = entry.TYPE().toString();
+                }
+                else {
+                    dataType = entry.CLASSNAME().toString();
+                    fullDataType = String.format("[classType= %s, isDefined= False]", dataType);
+                }
+
+                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
+            }
+            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+        }
+        scopes.peek().insert("Constructor_"+ctx.CLASSNAME(), String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
     public void exitConstructor(jythonParser.ConstructorContext ctx) {
-        indention -= 4;
-        System.out.print("}".indent(indention));
+        scopes.pop();
     }
 
     @Override
-    public void enterParameter(jythonParser.ParameterContext ctx) {
-        System.out.print("parameter list: [".indent(indention).stripTrailing());
-    }
+    public void enterParameter(jythonParser.ParameterContext ctx) {}
 
     @Override
-    public void exitParameter(jythonParser.ParameterContext ctx) {
-        System.out.println("]");
-    }
+    public void exitParameter(jythonParser.ParameterContext ctx) {}
 
     @Override
     public void enterStatement(jythonParser.StatementContext ctx) {}
@@ -152,194 +178,136 @@ public class ProgramPrinter implements jythonListener {
     public void exitStatement(jythonParser.StatementContext ctx) {}
 
     @Override
-    public void enterReturn_statment(jythonParser.Return_statmentContext ctx) {
-
-    }
+    public void enterReturn_statment(jythonParser.Return_statmentContext ctx) {}
 
     @Override
-    public void exitReturn_statment(jythonParser.Return_statmentContext ctx) {
-
-    }
+    public void exitReturn_statment(jythonParser.Return_statmentContext ctx) {}
 
     @Override
-    public void enterCondition_list(jythonParser.Condition_listContext ctx) {
-
-    }
+    public void enterCondition_list(jythonParser.Condition_listContext ctx) {}
 
     @Override
-    public void exitCondition_list(jythonParser.Condition_listContext ctx) {
-
-    }
+    public void exitCondition_list(jythonParser.Condition_listContext ctx) {}
 
     @Override
-    public void enterCondition(jythonParser.ConditionContext ctx) {
-
-    }
+    public void enterCondition(jythonParser.ConditionContext ctx) {}
 
     @Override
-    public void exitCondition(jythonParser.ConditionContext ctx) {
-
-    }
+    public void exitCondition(jythonParser.ConditionContext ctx) {}
 
     @Override
     public void enterIf_statment(jythonParser.If_statmentContext ctx) {
-        System.out.print(ctx.getText());
+        SymbolTable newScope = new SymbolTable("if", ctx.start.getLine());
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
     public void exitIf_statment(jythonParser.If_statmentContext ctx) {
-
+        scopes.pop();
     }
 
     @Override
     public void enterWhile_statment(jythonParser.While_statmentContext ctx) {
-
+        SymbolTable newScope = new SymbolTable("while", ctx.start.getLine());
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
-    public void exitWhile_statment(jythonParser.While_statmentContext ctx) {
-
-    }
+    public void exitWhile_statment(jythonParser.While_statmentContext ctx) {scopes.pop();}
 
     @Override
     public void enterIf_else_statment(jythonParser.If_else_statmentContext ctx) {
-//        System.out.println("if(");
-//        System.out.println(ctx.condition_list(1));
-
+        SymbolTable newScope = new SymbolTable("if-else", ctx.start.getLine());
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
-    public void exitIf_else_statment(jythonParser.If_else_statmentContext ctx) {
-
-    }
+    public void exitIf_else_statment(jythonParser.If_else_statmentContext ctx) {scopes.pop();}
 
     @Override
-    public void enterPrint_statment(jythonParser.Print_statmentContext ctx) {
-
-    }
+    public void enterPrint_statment(jythonParser.Print_statmentContext ctx) {}
 
     @Override
-    public void exitPrint_statment(jythonParser.Print_statmentContext ctx) {
-
-    }
+    public void exitPrint_statment(jythonParser.Print_statmentContext ctx) {}
 
     @Override
     public void enterFor_statment(jythonParser.For_statmentContext ctx) {
-
+        SymbolTable newScope = new SymbolTable("for", ctx.start.getLine());
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
     }
 
     @Override
     public void exitFor_statment(jythonParser.For_statmentContext ctx) {
-
+        scopes.pop();
     }
 
     @Override
-    public void enterMethod_call(jythonParser.Method_callContext ctx) {
-
-    }
+    public void enterMethod_call(jythonParser.Method_callContext ctx) {}
 
     @Override
-    public void exitMethod_call(jythonParser.Method_callContext ctx) {
-
-    }
+    public void exitMethod_call(jythonParser.Method_callContext ctx) {}
 
     @Override
-    public void enterAssignment(jythonParser.AssignmentContext ctx) {
-
-    }
+    public void enterAssignment(jythonParser.AssignmentContext ctx) {}
 
     @Override
-    public void exitAssignment(jythonParser.AssignmentContext ctx) {
-
-    }
+    public void exitAssignment(jythonParser.AssignmentContext ctx) {}
 
     @Override
-    public void enterExp(jythonParser.ExpContext ctx) {
-
-    }
+    public void enterExp(jythonParser.ExpContext ctx) {}
 
     @Override
-    public void exitExp(jythonParser.ExpContext ctx) {
-
-    }
+    public void exitExp(jythonParser.ExpContext ctx) {}
 
     @Override
-    public void enterPrefixexp(jythonParser.PrefixexpContext ctx) {
-
-    }
+    public void enterPrefixexp(jythonParser.PrefixexpContext ctx) {}
 
     @Override
-    public void exitPrefixexp(jythonParser.PrefixexpContext ctx) {
-
-    }
+    public void exitPrefixexp(jythonParser.PrefixexpContext ctx) {}
 
     @Override
-    public void enterArgs(jythonParser.ArgsContext ctx) {
-
-    }
+    public void enterArgs(jythonParser.ArgsContext ctx) {}
 
     @Override
-    public void exitArgs(jythonParser.ArgsContext ctx) {
-
-    }
+    public void exitArgs(jythonParser.ArgsContext ctx) {}
 
     @Override
-    public void enterExplist(jythonParser.ExplistContext ctx) {
-
-    }
+    public void enterExplist(jythonParser.ExplistContext ctx) {}
 
     @Override
-    public void exitExplist(jythonParser.ExplistContext ctx) {
-
-    }
+    public void exitExplist(jythonParser.ExplistContext ctx) {}
 
     @Override
-    public void enterArithmetic_operator(jythonParser.Arithmetic_operatorContext ctx) {
-
-    }
+    public void enterArithmetic_operator(jythonParser.Arithmetic_operatorContext ctx) {}
 
     @Override
-    public void exitArithmetic_operator(jythonParser.Arithmetic_operatorContext ctx) {
-
-    }
+    public void exitArithmetic_operator(jythonParser.Arithmetic_operatorContext ctx) {}
 
     @Override
-    public void enterRelational_operators(jythonParser.Relational_operatorsContext ctx) {
-
-    }
+    public void enterRelational_operators(jythonParser.Relational_operatorsContext ctx) {}
 
     @Override
-    public void exitRelational_operators(jythonParser.Relational_operatorsContext ctx) {
-
-    }
+    public void exitRelational_operators(jythonParser.Relational_operatorsContext ctx) {}
 
     @Override
-    public void enterAssignment_operators(jythonParser.Assignment_operatorsContext ctx) {
-
-    }
+    public void enterAssignment_operators(jythonParser.Assignment_operatorsContext ctx) {}
 
     @Override
-    public void exitAssignment_operators(jythonParser.Assignment_operatorsContext ctx) {
-
-    }
+    public void exitAssignment_operators(jythonParser.Assignment_operatorsContext ctx) {}
 
     @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
+    public void visitTerminal(TerminalNode terminalNode) {}
 
     @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
+    public void visitErrorNode(ErrorNode errorNode) {}
 
     @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
+    public void enterEveryRule(ParserRuleContext parserRuleContext) {}
 
     @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
+    public void exitEveryRule(ParserRuleContext parserRuleContext) {}
 }
