@@ -23,16 +23,16 @@ public class SymbolTable {
     }
 
     private String printItems(){
-        String tableBorder = '+' + "-".repeat(maxKeyLen) + '+' + "-".repeat(maxValueLen) + '+' + '\n';
+        String tableBorder = '+' + "-".repeat(maxKeyLen+1) + '+' + "-".repeat(maxValueLen+1) + '+' + '\n';
         StringBuilder tableString = new StringBuilder(tableBorder);
-        tableString.append("|" + String.format("%-" + maxKeyLen + "s", "KEY") + "|" + String.format("%-" + maxValueLen + "s", "VALUE") + "|").append('\n');
+        tableString.append("| " + String.format("%-" + maxKeyLen + "s", "KEY") + "| " + String.format("%-" + maxValueLen + "s", "VALUE") + "|").append('\n');
         tableString.append(tableBorder);
         for(var entry: table.entrySet()){
             String key = entry.getKey();
             String value = entry.getValue();
             key = String.format("%-" + maxKeyLen + "s", key);
             value = String.format("%-" + maxValueLen + "s", value);
-            tableString.append("|" + key + "|" + value + "|").append('\n');
+            tableString.append("| " + key + "| " + value + "|").append('\n');
         }
         tableString.append(tableBorder);
 
@@ -41,9 +41,8 @@ public class SymbolTable {
 
     @Override
     public String toString() {
-        return "=".repeat(80) +
-                "\nscope name: " + name + "\nscope number: " + scopeNumber + '\n' +
-                (table.size()>0 ? printItems() : "") + '\n'
+        return "=".repeat(30) + " " + name + ": " + scopeNumber + ' ' + "=".repeat(30) + '\n' +
+                (table.size()>0 ? printItems() : " - empty symbol table\n") + '\n'
                 ;
     }
 }
