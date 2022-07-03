@@ -4,11 +4,12 @@ class Human(Nothing, Nothing2){
     Nose nose
     Hand[2] hands
     Leg[2] legs
-    int calories
+    String calories
     bool isHungry
 
     def void main(){
         int count
+        calories = "high"
     }
     def Human(Nose n){
         self.nose = n
@@ -16,7 +17,7 @@ class Human(Nothing, Nothing2){
     def Voice speak(){
         Voice voice
         Voice[10] voices
-        return voice
+        return true
     }
     def void eat(Food food, int c){
         calories += c
