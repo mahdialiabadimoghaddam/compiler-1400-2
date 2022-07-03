@@ -1,5 +1,5 @@
 import Nothing
-import Nothing2
+import Voice
 class Human(Nothing, Nothing2){
     Nose nose
     Hand[2] hands
@@ -12,7 +12,7 @@ class Human(Nothing, Nothing2){
     }
 
     def Voice speak(){
-        Voic voice
+        Voice voice
         return voice
     }
 
