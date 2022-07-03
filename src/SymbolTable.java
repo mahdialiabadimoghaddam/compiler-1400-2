@@ -7,6 +7,11 @@ public class SymbolTable {
     private int maxKeyLen = 0;
     private int maxValueLen = 0;
 
+    public SymbolTable(String name, int scopeNumber) {
+        this.name = name;
+        this.scopeNumber = scopeNumber;
+    }
+
     public void insert(String idefNames, String values){
         table.put(idefNames, values);
         maxKeyLen = Math.max(maxKeyLen, idefNames.length()+1);
