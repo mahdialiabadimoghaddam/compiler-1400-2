@@ -1,8 +1,8 @@
 import java.util.HashMap;
 
 public class SymbolTable {
-    private String name;
-    private int scopeNumber;
+    private final String name;
+    private final int scopeNumber;
     private final HashMap<String, String> table = new HashMap<>();
     private int maxKeyLen = 0;
     private int maxValueLen = 0;
