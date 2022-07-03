@@ -37,9 +37,10 @@ public class ProgramPrinter implements jythonListener {
             }
         }
         else {
-            parents.append("object, ");
+            parents.append("object");
         }
-
+        parents.deleteCharAt(parents.length()-1);
+        
         scopes.peek().insert("class_"+ctx.CLASSNAME(0), String.format("class (name: %s) (parent: %s)", ctx.CLASSNAME(0), parents));
         SymbolTable newScope = new SymbolTable(ctx.CLASSNAME(0).toString(), ctx.start.getLine());
         scopes.peek().children.add(newScope);
@@ -61,7 +62,7 @@ public class ProgramPrinter implements jythonListener {
     public void enterVarDec(jythonParser.VarDecContext ctx) {
         String fieldType;
         String identifier = ctx.ID().toString();
-        String dataType = (ctx.CLASSNAME()==null) ? ctx.TYPE().toString() : "ClassType= "+ctx.CLASSNAME().toString();
+        String dataType = (ctx.CLASSNAME()==null) ? ctx.TYPE().toString()+", isDefined: True" : "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: False";
         switch (ctx.parent.getRuleIndex()){
             case 3: //class field
                 fieldType = "ClassField";
@@ -71,7 +72,7 @@ public class ProgramPrinter implements jythonListener {
                 break;
             default: return;
         }
-        scopes.peek().insert("Field_"+identifier, String.format("%s (name:%s) (type: [%s, isDefined: False])", fieldType, identifier, dataType));
+        scopes.peek().insert("Field_"+identifier, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
     }
 
     @Override
@@ -80,8 +81,8 @@ public class ProgramPrinter implements jythonListener {
     @Override
     public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
         if (ctx.parent.getRuleIndex() == 3) { //class_body
-            String dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString() : ctx.CLASSNAME().toString();
-            scopes.peek().insert("Field_"+ctx.ID().toString(), String.format("ClassArrayField (name: %s) (type: [%s, isDefined: False])", ctx.ID().toString(), dataType));
+            String dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: False";
+            scopes.peek().insert("Field_"+ctx.ID().toString(), String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
         }
     }
 
@@ -107,7 +108,7 @@ public class ProgramPrinter implements jythonListener {
                 String dataType;
                 String fullDataType;
                 if(entry.CLASSNAME() == null) {
-                    dataType = fullDataType = entry.TYPE().toString();
+                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
                 }
                 else {
                     dataType = entry.CLASSNAME().toString();
@@ -143,7 +144,7 @@ public class ProgramPrinter implements jythonListener {
                 String dataType;
                 String fullDataType;
                 if(entry.CLASSNAME() == null) {
-                    dataType = fullDataType = entry.TYPE().toString();
+                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
                 }
                 else {
                     dataType = entry.CLASSNAME().toString();
