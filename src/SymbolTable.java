@@ -41,9 +41,9 @@ public class SymbolTable {
 
     @Override
     public String toString() {
-        return "=".repeat(maxKeyLen+maxValueLen+3) +
+        return "=".repeat(80) +
                 "\nscope name: " + name + "\nscope number: " + scopeNumber + '\n' +
-                printItems()
+                (table.size()>0 ? printItems() : "") + '\n'
                 ;
     }
 }
