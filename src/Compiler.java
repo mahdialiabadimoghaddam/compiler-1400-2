@@ -19,8 +19,11 @@ public class Compiler {
         parser.setBuildParseTree(true);
         ParseTree tree = parser.program();
         ParseTreeWalker walker = new ParseTreeWalker();
-        jythonListener listener = new ProgramPrinter();
+        ProgramPrinter listener = new ProgramPrinter();
 
         walker.walk(listener, tree);
+
+        for (var entry: SymbolTable.instances)
+            System.out.println(entry);
     }
 }
