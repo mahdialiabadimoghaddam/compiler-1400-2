@@ -1,6 +1,11 @@
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class SymbolTable {
+    public static LinkedList<SymbolTable> instances = new LinkedList<>();
+    public static SymbolTable root;
+    public LinkedList<SymbolTable> children = new LinkedList<>();
+
     private final String name;
     private final int scopeNumber;
     private final HashMap<String, String> table = new HashMap<>();
@@ -10,6 +15,7 @@ public class SymbolTable {
     public SymbolTable(String name, int scopeNumber) {
         this.name = name;
         this.scopeNumber = scopeNumber;
+        instances.add(this);
     }
 
     public void insert(String idefNames, String values){
