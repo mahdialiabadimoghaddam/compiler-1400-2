@@ -9,10 +9,16 @@ class Human(Nothing, Nothing2){
 
     def Human(Nose n){
         self.nose = n
+        for i in range(0,100,1) {
+            print(0)
+        }
     }
 
     def Voice speak(){
         Voice voice
+        for i in hands{
+            print(0)
+        }
         return voice
     }
 
