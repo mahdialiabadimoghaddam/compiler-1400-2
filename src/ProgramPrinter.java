@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Stack;
 
 public class ProgramPrinter implements jythonListener {
@@ -110,6 +111,7 @@ public class ProgramPrinter implements jythonListener {
         SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine());
 
         String returnType = "void";
+        String identifier = ctx.ID().toString();
         if(ctx.TYPE() != null)
             returnType = ctx.TYPE().toString();
         else if(ctx.CLASSNAME() != null)
@@ -137,7 +139,12 @@ public class ProgramPrinter implements jythonListener {
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
 
-        scopes.peek().insert("Method_"+ctx.ID().toString(), String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
+        String key = "Method_"+identifier;
+        if(checkIdentifierIsDefined(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+        }
+
+        scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -151,6 +158,7 @@ public class ProgramPrinter implements jythonListener {
     public void enterConstructor(jythonParser.ConstructorContext ctx) {
         SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine());
 
+        String identifier = ctx.CLASSNAME().toString();
         StringBuilder parameterList = new StringBuilder();
         if(ctx.parameter().size() != 0){
             int index = 0;
@@ -172,7 +180,13 @@ public class ProgramPrinter implements jythonListener {
             }
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
-        scopes.peek().insert("Constructor_"+ctx.CLASSNAME(), String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+
+        String key = "Constructor_"+identifier;
+        if(checkIdentifierIsDefined(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1)){
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1);
+        }
+
+        scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -333,7 +347,7 @@ public class ProgramPrinter implements jythonListener {
     }
 
     private boolean checkIdentifierIsDefined(String identifier, String fieldType, int line, int column){
-        if (scopes.peek().lookup(fieldType+"_"+identifier)!=null) {
+        if (scopes.peek().lookup(fieldType + "_" + identifier)!=null) {
             fieldType = fieldType.toLowerCase();
             int errorNo = (fieldType=="field") ? 104 : 102;
             System.out.printf("Error%d : in line [%d:%d] , %s [%s] has been defined already\n", errorNo, line, column, fieldType, identifier);
