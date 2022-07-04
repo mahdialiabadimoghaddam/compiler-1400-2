@@ -2,10 +2,14 @@ import Nothing
 import Voice
 class Human(Nothing, Nothing2){
     Nose nose
+#    Nose nose
     Hand[2] hands
     Leg[2] legs
     int calories
     bool isHungry
+
+#    def Human(Nose n){
+#    }
 
     def Human(Nose n){
         self.nose = n
