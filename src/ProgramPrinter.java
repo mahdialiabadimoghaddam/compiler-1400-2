@@ -364,4 +364,8 @@ public class ProgramPrinter implements jythonListener {
         }
         return false;
     }
+
+    private void reportDuplicateClassError(String identifier, int line, int column){
+        System.out.printf("Error 100 : in line [%d:%d] , class [%s] has been defined already\n", line, column, identifier);
+    }
 }
