@@ -51,8 +51,17 @@ public class ProgramPrinter implements jythonListener {
         }
         parents.deleteCharAt(parents.length()-1);
 
-        scopes.peek().insert("class_"+ctx.CLASSNAME(0), String.format("class (name: %s) (parent: %s)", ctx.CLASSNAME(0), parents));
-        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME(0).toString(), ctx.start.getLine());
+        String identifier = ctx.CLASSNAME(0).toString();
+        String key = "class_"+identifier;
+        System.out.println(Boolean.parseBoolean(checkDataTypeIsDefined(identifier)));
+        if(Boolean.parseBoolean(checkDataTypeIsDefined(identifier))){
+            int line = ctx.start.getLine();
+            int column = ctx.CLASSNAME(0).getSymbol().getCharPositionInLine();
+            reportDuplicateClassError(identifier, line, column);
+            key = String.format("%s_%s_%s", identifier, line, column);
+        }
+        scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
+        SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -99,7 +108,7 @@ public class ProgramPrinter implements jythonListener {
         String identifier = ctx.ID().toString();
         switch (ctx.parent.getRuleIndex()) {
             case 3: //class_body
-                dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: False"+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+                dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: "+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
                 break;
             default: return;
         }
@@ -351,7 +360,7 @@ public class ProgramPrinter implements jythonListener {
     public void exitEveryRule(ParserRuleContext parserRuleContext) {}
 
     private String checkDataTypeIsDefined(String className){
-        return (SymbolTable.root.lookup("import_"+className)!=null || SymbolTable.root.lookup("class_"+className)!=null) ? "True" : "False";
+        return (SymbolTable.root.lookup("import_"+className)==null && SymbolTable.root.lookup("class_"+className)==null) ? "False" : "True";
     }
 
     private boolean checkIdentifierIsDefined(String identifier, String fieldType, int line, int column){
