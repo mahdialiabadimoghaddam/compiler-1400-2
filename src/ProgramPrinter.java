@@ -73,7 +73,7 @@ public class ProgramPrinter implements jythonListener {
                 break;
             default: return;
         }
-        if(isDefinedAlready(identifier)){
+        if(checkIdentifierIsDefined(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
             return;
         }
         scopes.peek().insert("Field_"+identifier, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
