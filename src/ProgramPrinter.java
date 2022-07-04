@@ -86,10 +86,15 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
-        if (ctx.parent.getRuleIndex() == 3) { //class_body
-            String dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: False"+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
-            scopes.peek().insert("Field_"+ctx.ID().toString(), String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
+        String dataType;
+        switch (ctx.parent.getRuleIndex()) {
+            case 3: //class_body
+                dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: False"+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+                break;
+            default: return;
         }
+        
+        scopes.peek().insert("Field_"+ctx.ID().toString(), String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
     }
 
     @Override
