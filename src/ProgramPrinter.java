@@ -62,7 +62,7 @@ public class ProgramPrinter implements jythonListener {
     public void enterVarDec(jythonParser.VarDecContext ctx) {
         String fieldType;
         String identifier = ctx.ID().toString();
-        String dataType = (ctx.CLASSNAME()==null) ? ctx.TYPE().toString()+", isDefined: True" : "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ checkIsDefined(ctx.CLASSNAME().toString());
+        String dataType = (ctx.CLASSNAME()==null) ? ctx.TYPE().toString()+", isDefined: True" : "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
         switch (ctx.parent.getRuleIndex()){
             case 3: //class field
                 fieldType = "ClassField";
@@ -71,6 +71,9 @@ public class ProgramPrinter implements jythonListener {
                 fieldType = "MethodField";
                 break;
             default: return;
+        }
+        if(isDefinedAlready(identifier)){
+            return;
         }
         scopes.peek().insert("Field_"+identifier, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
     }
@@ -81,7 +84,7 @@ public class ProgramPrinter implements jythonListener {
     @Override
     public void enterArrayDec(jythonParser.ArrayDecContext ctx) { //TODO
         if (ctx.parent.getRuleIndex() == 3) { //class_body
-            String dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: False"+ checkIsDefined(ctx.CLASSNAME().toString());
+            String dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: False"+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
             scopes.peek().insert("Field_"+ctx.ID().toString(), String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
         }
     }
@@ -112,7 +115,7 @@ public class ProgramPrinter implements jythonListener {
                 }
                 else {
                     dataType = entry.CLASSNAME().toString();
-                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, checkIsDefined(entry.CLASSNAME().toString()));
+                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
 
                 newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
@@ -148,7 +151,7 @@ public class ProgramPrinter implements jythonListener {
                 }
                 else {
                     dataType = entry.CLASSNAME().toString();
-                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, checkIsDefined(entry.CLASSNAME().toString()));
+                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
 
                 newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
@@ -312,7 +315,7 @@ public class ProgramPrinter implements jythonListener {
     @Override
     public void exitEveryRule(ParserRuleContext parserRuleContext) {}
 
-    private String checkIsDefined(String className){
+    private String checkDataTypeIsDefined(String className){
         return (SymbolTable.root.lookup("import_"+className)!=null || SymbolTable.root.lookup("class_"+className)!=null) ? "True" : "False";
     }
 }
