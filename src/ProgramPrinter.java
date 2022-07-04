@@ -73,10 +73,12 @@ public class ProgramPrinter implements jythonListener {
                 break;
             default: return;
         }
+
+        String key = "Field_"+identifier;
         if(checkIdentifierIsDefined(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
-            return;
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
-        scopes.peek().insert("Field_"+identifier, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
+        scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
     }
 
     @Override
@@ -324,7 +326,7 @@ public class ProgramPrinter implements jythonListener {
         if (scopes.peek().lookup(fieldType+"_"+identifier)!=null) {
             fieldType = fieldType.toLowerCase();
             int errorNo = (fieldType=="field") ? 104 : 102;
-            System.out.println(String.format("Error%d : in line [%d:%d] , %s [%s] has been defined already", errorNo, line, column, fieldType, identifier));
+            System.out.printf("Error%d : in line [%d:%d] , %s [%s] has been defined already\n", errorNo, line, column, fieldType, identifier);
 
             return true;
         }
