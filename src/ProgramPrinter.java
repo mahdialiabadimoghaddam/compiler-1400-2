@@ -24,7 +24,15 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterImportclass(jythonParser.ImportclassContext ctx) {
-        scopes.peek().insert("import_" + ctx.CLASSNAME(), "import" + " (name: " + ctx.CLASSNAME() + ")");
+        String identifier = ctx.CLASSNAME().toString();
+        String key = "import_" + identifier;
+        if(Boolean.parseBoolean(checkDataTypeIsDefined(ctx.CLASSNAME().toString()))){
+            int line = ctx.start.getLine();
+            int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
+            reportDuplicateClassError(identifier, line, column);
+            key = String.format("%s_%s_%s", identifier, line, column);
+        }
+        scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
     }
 
     @Override
