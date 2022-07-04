@@ -357,7 +357,7 @@ public class ProgramPrinter implements jythonListener {
     private boolean checkIdentifierIsDefined(String identifier, String fieldType, int line, int column){
         if (scopes.peek().lookup(fieldType + "_" + identifier)!=null) {
             fieldType = fieldType.toLowerCase();
-            int errorNo = (fieldType=="field") ? 104 : 102;
+            int errorNo = (fieldType.equals("field")) ? 104 : 102;
             System.out.printf("Error%d : in line [%d:%d] , %s [%s] has been defined already\n", errorNo, line, column, fieldType, identifier);
 
             return true;
