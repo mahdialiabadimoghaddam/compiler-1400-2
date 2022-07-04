@@ -1,5 +1,12 @@
 import Nothing
 import Voice
+import Nothing
+import Voice
+
+class Human(Nothing, Nothing2){
+
+}
+
 class Human(Nothing, Nothing2){
     Nose nose
 #    Nose nose
