@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.Locale;
 import java.util.Stack;
 
 public class ProgramPrinter implements jythonListener {
@@ -317,5 +318,16 @@ public class ProgramPrinter implements jythonListener {
 
     private String checkDataTypeIsDefined(String className){
         return (SymbolTable.root.lookup("import_"+className)!=null || SymbolTable.root.lookup("class_"+className)!=null) ? "True" : "False";
+    }
+
+    private boolean checkIdentifierIsDefined(String identifier, String fieldType, int line, int column){
+        if (scopes.peek().lookup(fieldType+"_"+identifier)!=null) {
+            fieldType = fieldType.toLowerCase();
+            int errorNo = (fieldType=="field") ? 104 : 102;
+            System.out.println(String.format("Error%d : in line [%d:%d] , %s [%s] has been defined already", errorNo, line, column, fieldType, identifier));
+
+            return true;
+        }
+        return false;
     }
 }
