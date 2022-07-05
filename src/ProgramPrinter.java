@@ -282,6 +282,9 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterFor_statment(jythonParser.For_statmentContext ctx) {
+        for (TerminalNode entry: ctx.ID())
+            detectUndeclaredVariable(entry);
+
         SymbolTable newScope = new SymbolTable("for", ctx.start.getLine());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
@@ -305,13 +308,19 @@ public class ProgramPrinter implements jythonListener {
     public void exitAssignment(jythonParser.AssignmentContext ctx) {}
 
     @Override
-    public void enterExp(jythonParser.ExpContext ctx) {}
+    public void enterExp(jythonParser.ExpContext ctx) {
+        if(ctx.ID()!=null)
+            detectUndeclaredVariable(ctx.ID());
+    }
 
     @Override
     public void exitExp(jythonParser.ExpContext ctx) {}
 
     @Override
-    public void enterPrefixexp(jythonParser.PrefixexpContext ctx) {}
+    public void enterPrefixexp(jythonParser.PrefixexpContext ctx) {
+        if(ctx.ID()!=null)
+            detectUndeclaredVariable(ctx.ID());
+    }
 
     @Override
     public void exitPrefixexp(jythonParser.PrefixexpContext ctx) {}
@@ -371,6 +380,11 @@ public class ProgramPrinter implements jythonListener {
             return true;
         }
         return false;
+    }
+
+    private void detectUndeclaredVariable(TerminalNode id){
+        if(scopes.peek().lookup("Field_"+id.getText())==null)
+            System.out.printf("Error106 : in line [%d:%d] , Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine()+1, id.getText());
     }
 
     private void reportDuplicateClassError(String identifier, int line, int column){
