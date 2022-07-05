@@ -41,6 +41,7 @@ public class ProgramPrinter implements jythonListener {
         StringBuilder parents = new StringBuilder();
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
+                detectUndeclaredClass(ctx.CLASSNAME(i));
                 parents.append(ctx.CLASSNAME(i)).append(",");
             }
         }
@@ -79,7 +80,14 @@ public class ProgramPrinter implements jythonListener {
     public void enterVarDec(jythonParser.VarDecContext ctx) {
         String fieldType;
         String identifier = ctx.ID().toString();
-        String dataType = (ctx.CLASSNAME()==null) ? ctx.TYPE().toString()+", isDefined: True" : "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+        String dataType;
+        if (ctx.CLASSNAME()==null)
+            dataType = ctx.TYPE().toString()+", isDefined: True";
+        else{
+            dataType = "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+            detectUndeclaredClass(ctx.CLASSNAME());
+        }
+
         switch (ctx.parent.getRuleIndex()){
             case 3: //class field
                 fieldType = "ClassField";
@@ -106,7 +114,12 @@ public class ProgramPrinter implements jythonListener {
         String identifier = ctx.ID().toString();
         switch (ctx.parent.getRuleIndex()) {
             case 3: //class_body
-                dataType = (ctx.CLASSNAME() == null) ? ctx.TYPE().toString()+", isDefined: True" : ctx.CLASSNAME().toString()+", isDefined: "+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+                if (ctx.CLASSNAME()==null)
+                    dataType = ctx.TYPE().toString()+", isDefined: True";
+                else{
+                    dataType = ctx.CLASSNAME().toString()+", isDefined: "+ checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+                    detectUndeclaredClass(ctx.CLASSNAME());
+                }
                 break;
             default: return;
         }
@@ -129,8 +142,10 @@ public class ProgramPrinter implements jythonListener {
         String identifier = ctx.ID().toString();
         if(ctx.TYPE() != null)
             returnType = ctx.TYPE().toString();
-        else if(ctx.CLASSNAME() != null)
+        else if(ctx.CLASSNAME() != null) {
             returnType = "class type= " + ctx.CLASSNAME().toString();
+            detectUndeclaredClass(ctx.CLASSNAME());
+        }
 
         StringBuilder parameterList = new StringBuilder();
         //copy az phase 1
@@ -391,6 +406,12 @@ public class ProgramPrinter implements jythonListener {
         }
         if(notFound)
             System.out.printf("Error106 : in line [%d:%d] , Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine()+1, id.getText());
+    }
+
+    private void detectUndeclaredClass(TerminalNode className){
+        if(!Boolean.parseBoolean(checkDataTypeIsDefined(className.getText()))){
+            System.out.printf("Error105 : in line [%d:%d] , Can not find Class [%s]\n", className.getSymbol().getLine(), className.getSymbol().getCharPositionInLine()+1, className.getText());
+        }
     }
 
     private void reportDuplicateClassError(String identifier, int line, int column){
