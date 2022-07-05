@@ -9,6 +9,7 @@ class Human(Nothing, Nothing2){
     Leg[2] legs
     int calories
     bool isHungryq
+    Food newFood
 
 
     def Human(Nose n){
