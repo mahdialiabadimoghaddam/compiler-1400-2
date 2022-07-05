@@ -11,7 +11,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterProgram(jythonParser.ProgramContext ctx) {
-        scopes.push(new SymbolTable("program", ctx.start.getLine()));
+        scopes.push(new SymbolTable("program", ctx.start.getLine(), null));
         SymbolTable.root = scopes.peek();
     }
 
@@ -59,7 +59,7 @@ public class ProgramPrinter implements jythonListener {
             key = String.format("%s_%s_%s", identifier, line, column);
         }
         scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
-        SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -123,7 +123,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterMethodDec(jythonParser.MethodDecContext ctx) {
-        SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine(), scopes.peek());
 
         String returnType = "void";
         String identifier = ctx.ID().toString();
@@ -172,7 +172,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterConstructor(jythonParser.ConstructorContext ctx) {
-        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine(), scopes.peek());
 
         String identifier = ctx.CLASSNAME().toString();
         StringBuilder parameterList = new StringBuilder();
@@ -244,7 +244,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterIf_statment(jythonParser.If_statmentContext ctx) {
-        SymbolTable newScope = new SymbolTable("if", ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable("if", ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -256,7 +256,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterWhile_statment(jythonParser.While_statmentContext ctx) {
-        SymbolTable newScope = new SymbolTable("while", ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable("while", ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -266,7 +266,7 @@ public class ProgramPrinter implements jythonListener {
 
     @Override
     public void enterIf_else_statment(jythonParser.If_else_statmentContext ctx) {
-        SymbolTable newScope = new SymbolTable("if-else", ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable("if-else", ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -285,7 +285,7 @@ public class ProgramPrinter implements jythonListener {
         for (TerminalNode entry: ctx.ID())
             detectUndeclaredVariable(entry);
 
-        SymbolTable newScope = new SymbolTable("for", ctx.start.getLine());
+        SymbolTable newScope = new SymbolTable("for", ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -383,7 +383,13 @@ public class ProgramPrinter implements jythonListener {
     }
 
     private void detectUndeclaredVariable(TerminalNode id){
-        if(scopes.peek().lookup("Field_"+id.getText())==null)
+        boolean notFound = true;
+        SymbolTable symbolTable = scopes.peek();
+        while(notFound && symbolTable!=null){
+            notFound = (symbolTable.lookup("Field_"+id.getText())==null);
+            symbolTable = symbolTable.parent;
+        }
+        if(notFound)
             System.out.printf("Error106 : in line [%d:%d] , Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine()+1, id.getText());
     }
 
