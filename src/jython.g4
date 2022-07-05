@@ -25,7 +25,7 @@ assignment : prefixexp assignment_operators exp
 | arrayDec '=' (TYPE | CLASSNAME) args ('['INTEGER']') ;
 exp :'none' | BOOL | INTEGER | STRING | FLOAT | prefixexp | exp arithmetic_operator exp
 | (TYPE | CLASSNAME) args | '('exp')' | ID args ;
-prefixexp : ID | prefixexp '[' INTEGER ']' | prefixexp '.' ID | prefixexp '.' ID args ;
+prefixexp : ID | prefixexp '[' INTEGER ']' | prefixexp '.' ID | prefixexp '.' method_call ;
 args : '(' (explist)? ')' ;
 explist : exp (',' exp)*;
 arithmetic_operator: '+' | '-' | '*' | '/' | '%' ;
@@ -33,7 +33,7 @@ relational_operators : '<' | '>' | '<=' | '>=' | '==' | '!=' ;
 assignment_operators : '=' | '+=' | '-=' | '*=' | '/=' ;
 
 TYPE: 'int' | 'float' | 'String' | 'bool';
-BOOL: 'ture'|'false';
+BOOL: 'true'|'false';
 CLASSNAME: [A-Z] (LETTER|DIGIT)*;
 ID: [a-z]([A-Za-z_])*;
 LETTER: [A-Za-z];

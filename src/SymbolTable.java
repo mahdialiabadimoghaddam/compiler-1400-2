@@ -5,6 +5,7 @@ public class SymbolTable {
     public static LinkedList<SymbolTable> instances = new LinkedList<>();
     public static SymbolTable root;
     public LinkedList<SymbolTable> children = new LinkedList<>();
+    public SymbolTable parent;
 
     private final String name;
     private final int scopeNumber;
@@ -12,9 +13,10 @@ public class SymbolTable {
     private int maxKeyLen = 0;
     private int maxValueLen = 0;
 
-    public SymbolTable(String name, int scopeNumber) {
+    public SymbolTable(String name, int scopeNumber, SymbolTable parent) {
         this.name = name;
         this.scopeNumber = scopeNumber;
+        this.parent = parent;
         instances.add(this);
     }
 
