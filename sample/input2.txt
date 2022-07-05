@@ -1,11 +1,5 @@
 import Nothing
 import Voice
-import Nothing
-import Voice
-
-class Human(Nothing, Nothing2){
-
-}
 
 class Human(Nothing, Nothing2){
     Nose nose
@@ -14,10 +8,8 @@ class Human(Nothing, Nothing2){
 #    Hand[2] hands
     Leg[2] legs
     int calories
-    bool isHungry
+    bool isHungryq
 
-    def Human(Nose n){
-    }
 
     def Human(Nose n){
         self.nose = n
@@ -26,7 +18,7 @@ class Human(Nothing, Nothing2){
         }
     }
 
-    def Voice speak(){
+    def int speak(){
         Voice voice
         return voice
     }
