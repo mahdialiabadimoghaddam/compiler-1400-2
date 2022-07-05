@@ -4,8 +4,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Stack;
 
 public class ProgramPrinter implements jythonListener {
@@ -93,7 +91,7 @@ public class ProgramPrinter implements jythonListener {
         }
 
         String key = "Field_"+identifier;
-        if(checkIdentifierIsDefined(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
+        if(detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
         scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
@@ -114,7 +112,7 @@ public class ProgramPrinter implements jythonListener {
         }
 
         String key = "Field_"+identifier;
-        if(checkIdentifierIsDefined(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
+        if(detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
         scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
@@ -135,6 +133,7 @@ public class ProgramPrinter implements jythonListener {
             returnType = "class type= " + ctx.CLASSNAME().toString();
 
         StringBuilder parameterList = new StringBuilder();
+        //copy az phase 1
         if(ctx.parameter().size() != 0){
             int index = 0;
             parameterList.append("[parameter list: ");
@@ -157,7 +156,7 @@ public class ProgramPrinter implements jythonListener {
         }
 
         String key = "Method_"+identifier;
-        if(checkIdentifierIsDefined(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
+        if(detectDuplicateDeclaration(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
 
@@ -199,7 +198,7 @@ public class ProgramPrinter implements jythonListener {
         }
 
         String key = "Constructor_"+identifier;
-        if(checkIdentifierIsDefined(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1)){
+        if(detectDuplicateDeclaration(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1);
         }
 
@@ -363,7 +362,7 @@ public class ProgramPrinter implements jythonListener {
         return (SymbolTable.root.lookup("import_"+className)==null && SymbolTable.root.lookup("class_"+className)==null) ? "False" : "True";
     }
 
-    private boolean checkIdentifierIsDefined(String identifier, String fieldType, int line, int column){
+    private boolean detectDuplicateDeclaration(String identifier, String fieldType, int line, int column){
         if (scopes.peek().lookup(fieldType + "_" + identifier)!=null) {
             fieldType = fieldType.toLowerCase();
             int errorNo = (fieldType.equals("field")) ? 104 : 102;
