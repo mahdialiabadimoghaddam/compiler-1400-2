@@ -52,7 +52,6 @@ public class ProgramPrinter implements jythonListener {
 
         String identifier = ctx.CLASSNAME(0).toString();
         String key = "class_"+identifier;
-        System.out.println(Boolean.parseBoolean(checkDataTypeIsDefined(identifier)));
         if(Boolean.parseBoolean(checkDataTypeIsDefined(identifier))){
             int line = ctx.start.getLine();
             int column = ctx.CLASSNAME(0).getSymbol().getCharPositionInLine();
